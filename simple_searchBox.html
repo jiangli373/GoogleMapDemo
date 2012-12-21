@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <style type="text/css">
+        html {
+            height: 100%
+        }
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0
+        }
+
+        input {
+            width: 400px;
+        }
+
+        #map_canvas {
+            height: 100%
+        }
+    </style>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+    <script type="text/javascript" src="js/jquery/jquery-1.8.1.min.js"></script>
+</head>
+<body>
+<div id="search-panel">
+    <label for="target">地点:</label><input id="target" type="text" placeholder="Search Box">
+</div>
+
+<div id="map_canvas" style="width:100%; height:100%"></div>
+<script>
+    $(document).ready(function () {
+
+        var mapOptions = {
+            zoom:11,
+            mapTypeId:google.maps.MapTypeId.ROADMAP,
+            center:new google.maps.LatLng(39.999282, 116.409489)
+        };
+
+        var map = new google.maps.Map(document.getElementById('map_canvas'),
+                mapOptions);
+
+        var input = document.getElementById('target');
+        var searchBox = new google.maps.places.SearchBox(input);
+        var markers = [];
+
+        google.maps.event.addListener(searchBox, 'places_changed', function () {
+            var places = searchBox.getPlaces();
+
+            var bounds = new google.maps.LatLngBounds();
+            for (var i = 0, place; place = places[i]; i++) {
+
+                var marker = new google.maps.Marker({
+                    map:map,
+                    title:place.name,
+                    animation:google.maps.Animation.DROP,
+                    position:place.geometry.location
+                });
+
+                markers.push(marker);
+
+                bounds.extend(place.geometry.location);
+            }
+
+            map.fitBounds(bounds);
+        });
+
+        google.maps.event.addListener(map, 'bounds_changed', function () {
+            var bounds = map.getBounds();
+            searchBox.setBounds(bounds);
+        });
+    });
+</script>
+</body>
+</html>

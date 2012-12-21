@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>路线查询</title>
+    <script src="http://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+    <script src="js/jquery/jquery-1.8.1.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+        input[type=text]{
+            width:400px
+        }
+    </style>
+</head>
+<body>
+<div id="map_canvas" style="float:left;width:70%;height:100%;"></div>
+<div id="control_panel" style="float:right;width:30%;text-align:left;padding-top:20px">
+    <div style="margin:20px;border-width:2px;">
+        <b>起始位置</b>
+        <input id="startposition" type="text" placeholder="start" value="St. Regis New York, East 55th Street, Manhattan, NY">
+        <br>
+        <b>途径位置</b> <br>
+        <input type="text" id="p1" placeholder="end" value="Metropolitan Museum of Art, 5th Avenue, New York, NY">
+        <input type="text" id="p2" placeholder="end" value="Louis Vuitton, Greene Street, New York, NY">
+        <input type="text" id="p3" placeholder="end" value="Battery Park, New York, NY">
+        <input type="text" id="p4" placeholder="end" value="Empire Boulevard, New York, NY, United States">
+        <br>
+        <b>终止位置</b>
+        <input type="text" id="endposition" placeholder="end" value="Central Park, New York, NY">
+        <br>
+        <input type="submit" id="find" value="查询">
+    </div>
+    <div id="directions_panel" style="margin:20px;background-color:#FFEE77;"></div>
+</div>
+<script>
+    $(document).ready(function(){
+        var mapOptions = {
+//            center: new google.maps.LatLng(40.727486,-74.001366),
+            center: new google.maps.LatLng(39.999282,116.409489),
+            zoom: 13,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById('map_canvas'),
+                mapOptions);
+
+        var directionsDisplay;
+
+        var directionsService = new google.maps.DirectionsService();
+        directionsDisplay = new google.maps.DirectionsRenderer();
+        directionsDisplay.setMap(map);
+        directionsDisplay.setPanel(document.getElementById("directions_panel"));
+
+        google.maps.event.addListener(map, 'bounds_changed', function() {
+            var defaultBounds = map.getBounds();
+            startposition.setBounds(defaultBounds);
+            endposition.setBounds(defaultBounds);
+            p1.setBounds(defaultBounds);
+            p2.setBounds(defaultBounds);
+            p3.setBounds(defaultBounds);
+            p4.setBounds(defaultBounds);
+        });
+
+
+        var input_start = document.getElementById('startposition');
+        var startposition = new google.maps.places.SearchBox(input_start);
+
+        var input_p1 = document.getElementById('p1');
+        var p1 = new google.maps.places.SearchBox(input_p1);
+
+        var input_p2 = document.getElementById('p2');
+        var p2 = new google.maps.places.SearchBox(input_p2);
+
+        var input_p3 = document.getElementById('p3');
+        var p3 = new google.maps.places.SearchBox(input_p3);
+
+        var input_p4 = document.getElementById('p4');
+        var p4 = new google.maps.places.SearchBox(input_p4);
+
+        var input_end = document.getElementById('endposition');
+        var endposition = new google.maps.places.SearchBox(input_end);
+        var markers = [];
+
+
+        $("#find").on("click",function(){
+            var start = document.getElementById('startposition').value;
+            var end = document.getElementById('endposition').value;
+            var waypts = [];
+                 for(var i =1 ; i<5;i++){
+                     waypts.push({
+                         location:document.getElementById('p'+i).value,
+                         stopover:true
+                     });
+                 }
+
+
+
+            var request = {
+                origin: start,
+                destination: end,
+                waypoints: waypts,
+                optimizeWaypoints: true,
+                travelMode: google.maps.DirectionsTravelMode.DRIVING
+            };
+            directionsService.route(request, function(response, status) {
+                console.log(status);
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsDisplay.setDirections(response);
+                    var route = response.routes[0];
+                    var summaryPanel = document.getElementById('directions_panel');
+                    summaryPanel.innerHTML = '';
+                    // For each route, display summary information.
+                    for (var i = 0; i < route.legs.length; i++) {
+                        var routeSegment = i + 1;
+                        summaryPanel.innerHTML += '<b>Route Segment: ' + routeSegment + '</b><br>';
+                        summaryPanel.innerHTML += route.legs[i].start_address + ' to ';
+                        summaryPanel.innerHTML += route.legs[i].end_address + '<br>';
+                        summaryPanel.innerHTML += route.legs[i].distance.text + '<br><br>';
+                    }
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

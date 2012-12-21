@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <style type="text/css">
+        html {
+            height: 100%
+        }
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0
+        }
+
+        input {
+            width: 400px;
+        }
+
+        #map_canvas {
+            height: 100%
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+        li {
+            background-color: #f1f1f1;
+            padding: 10px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        li:nth-child(odd) {
+            background-color: #fcfcfc;
+        }
+
+    </style>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+    <script type="text/javascript" src="js/jquery/jquery-1.8.1.min.js"></script>
+</head>
+<body>
+
+<div id="map_canvas" style="float:left;width:70%;height:100%;"></div>
+<div id="control_panel" style="float:right;width:30%;text-align:left;padding-top:20px">
+    <div style="margin:20px;border-width:2px;">
+        <div id="search-panel">
+            <input type="button" value="查找" id="find">
+            <input type="button" value="重置" id="reset">
+        </div>
+    </div>
+    <div id="directions_panel" style="margin:20px;background-color:#FFEE77;">
+        <h2>Results</h2>
+        <ul id="places"></ul>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        var mapOptions = {
+            zoom:11,
+            mapTypeId:google.maps.MapTypeId.ROADMAP,
+            center:new google.maps.LatLng(39.999282, 116.409489)
+        };
+
+        var map = new google.maps.Map(document.getElementById('map_canvas'),
+                mapOptions);
+
+        var placesList = document.getElementById('places');
+
+
+
+        var rectangle;
+        var  origin,end,flag=true;
+        var markers = [];
+            google.maps.event.addListener(map, 'click', function(event) {
+                if(flag){
+                    rectangle = new google.maps.Rectangle();
+                    origin = event.latLng;
+                }else{
+                    end = event.latLng;
+                    var rectOptions = {
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: "#FF0000",
+                    fillOpacity: 0.1,
+                    map: map,
+                    bounds: new google.maps.LatLngBounds(
+                            origin,
+                            end
+                    ),
+                    editable: true
+                };
+                rectangle.setOptions(rectOptions);
+                rectangle.setMap(map);
+                }
+                flag = !flag;
+            });
+
+        $("#reset").on("click",function(){
+            $(placesList).empty();
+            rectangle.setMap(null);
+        });
+
+         $("#find").on("click",function(){
+             clearMarkers();
+             var request = {
+                 bounds: rectangle.getBounds(),
+                 types: ['food']
+             };
+             service = new google.maps.places.PlacesService(map);
+             service.nearbySearch(request, callback);
+         });
+
+
+        function callback(results, status) {
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                for (var i = 0; i < results.length; i++) {
+                    var place = results[i];
+                    placesList.innerHTML += '<li>' + place.name + '</li>';
+                    markers[i] = new google.maps.Marker({
+                        map: map,
+                        position: place.geometry.location
+                    })
+                }
+                map.setZoom(12);
+                map.fitBounds(rectangle.getBounds());
+            }
+        }
+
+
+        function clearMarkers() {
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(null);
+            }
+        }
+    });
+</script>
+</body>
+</html>
